@@ -1,39 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../cubits/get_weather_cubit.dart';
+import 'package:provider/provider.dart';
+import 'package:weatherapp/cubits/weather_provider.dart';
+import 'package:weatherapp/models/weather_models.dart';
+import 'package:weatherapp/services/weather_service.dart';
 
 class SearchView extends StatelessWidget {
-  const SearchView({super.key});
-
+  String? cityName;
+  SearchView({this.updateUi});
+  VoidCallback? updateUi;
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-      appBar:AppBar(
-        title: const Text('Search a City'),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        title: Text('Search a City'),
       ),
-      body:   Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Center(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: TextField(
-            onSubmitted: (value) {
-              var getWeatherCubit = BlocProvider.of<GetWeatherCubit>(context);
-              getWeatherCubit.getWeather(cityName: value);
+            onChanged: (data)
+            {
+               cityName = data;
+            },
+            onSubmitted: (data) async {
+              cityName = data;
+
+              WeatherService service = WeatherService();
+
+              WeatherModel? weather =
+                  await service.getWeather(cityName: cityName!);
+
+              Provider.of<WeatherProvider>(context,listen: false).weatherData = weather;
+                           Provider.of<WeatherProvider>(context,listen: false).cityName = cityName;
+
               Navigator.pop(context);
             },
-            // enabled: false,
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 32,
-              ),
-              labelText: "Search",
-              suffixIcon: Icon(Icons.search),
-              hintText: 'Enter City Name',
-              border: OutlineInputBorder(
-                borderSide:  BorderSide(
-                  color: Colors.blue,
-                ),
-              ),
+            decoration: InputDecoration(
+              contentPadding:
+                  EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              label: Text('search'),
+              suffixIcon: GestureDetector(
+                
+                onTap : () async 
+                {
+                    WeatherService service = WeatherService();
+
+              WeatherModel? weather =
+            await service.getWeather(cityName: cityName!);
+
+              Provider.of<WeatherProvider>(context,listen: false).weatherData = weather;
+                           Provider.of<WeatherProvider>(context,listen: false).cityName = cityName;
+
+              Navigator.pop(context);
+                },
+                child: Icon(Icons.search)),
+              border: OutlineInputBorder(),
+              hintText: 'Enter a city',
             ),
           ),
         ),

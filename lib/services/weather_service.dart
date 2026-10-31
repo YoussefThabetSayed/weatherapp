@@ -1,26 +1,25 @@
-import 'package:dio/dio.dart';
-import '../models/weather_models.dart';
+import 'dart:convert';
 
-class WeatherService{
-  final Dio dio;
-  final String baseUrl='https://api.weatherapi.com/v1';
-  final String apiKey='ccd5331f806d445993b160701261507';
-  WeatherService(this.dio);
+import 'package:http/http.dart' as http;
+import 'package:weatherapp/models/weather_models.dart';
 
-  Future<WeatherModel> getCurrentWeather({required String cityName}) async
-  {
-    try {
-      Response response =await dio.get(
-          '$baseUrl/forecast.json?key=$apiKey&q=$cityName&days=1');
-      WeatherModel weatherModel= WeatherModel.fromJson(response.data);
-      return weatherModel;
-    }on DioException catch (e) {
-      final errMessage= e.response?.data['error']['message']??
-          'oops error!,try later';
-      throw Exception(errMessage);
+class WeatherService {
+  String baseUrl = 'http://api.weatherapi.com/v1';
+
+  String apiKey = '3677bed892474b30b7a122242220806';
+  Future<WeatherModel> getWeather({required String cityName}) async {
+    Uri url =
+        Uri.parse('$baseUrl/forecast.json?key=$apiKey&q=$cityName&days=7');
+    http.Response response = await http.get(url);
+
+    if (response.statusCode == 400) {
+    var data  = jsonDecode(response.body);
+      throw Exception(data['error']['message']);
     }
-    catch(e){
-      throw Exception('try later');
-    }
+    Map<String, dynamic> data = jsonDecode(response.body);
+
+    WeatherModel weather = WeatherModel.fromJson(data);
+
+    return weather;
   }
 }
